@@ -13,11 +13,21 @@
 
    <dependencies>
 
- 	<dependency>
+
+	<dependency>
 		<groupId>org.openjfx</groupId>
-	  <artifactId>javafx-fxml</artifactId>
-	  <version>17-ea+8</version>
+	  	<artifactId>javafx-fxml</artifactId>
+	  	<version>17-ea+8</version>
 	</dependency>
+
+   
+
+
+	<!-- <dependency>
+    	<groupId>com.github.almasb</groupId>
+    	<artifactId>fxgl</artifactId>
+    	<version>17</version>
+	</dependency> -->
 
 
 	<!-- JUnit 5 -->
