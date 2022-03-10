@@ -198,4 +198,7 @@ buildNumber.properties
 # Ignore all local history of files
 .history
 
+# ignore sprite folder
+src/main/resources/stickyblocks/Sprites
+
 # End of https://www.gitignore.io/api/java,maven,eclipse,intellij+all,visualstudiocode

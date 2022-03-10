@@ -47,7 +47,6 @@ public class Game {
             Player player = new Player(board[y][x]);
             players.add(player);
         }
-        System.out.println(this);
     }
 
     private void move(int dx, int dy) {
@@ -108,13 +107,12 @@ public class Game {
         }
 
         for (int i = activePlayers.size() - 1; i >= 0; --i) {
-            if (activePlayers.get(i).getTile().getType() == 'h') {
+            if (activePlayers.get(i).getTile().getType() == "h") {
 
                 activePlayers.get(i).setTile(null);
                 players.remove(activePlayers.get(i));
                 activePlayers.remove(i);
 
-                System.out.println(activePlayers);
             }
         }
 
@@ -126,10 +124,7 @@ public class Game {
 
     private boolean canMove(int dx, int dy) {
 
-        // Sjekk for hver enkelt brikke om noe er lovlig.
-
         for (Player player : activePlayers) {
-            System.out.println(player);
             // Ut av brettet
             if ((player.getX() + dx >= getWidth() || player.getX() + dx < 0) ||
                     (player.getY() + dy >= getHeight() || player.getY() + dy < 0)) {
@@ -138,7 +133,7 @@ public class Game {
 
             try {
 
-                if (board[player.getY() + dy][player.getX() + dx].getType() == 'w' ||
+                if (board[player.getY() + dy][player.getX() + dx].getType() == "w" ||
                         (board[player.getY() + dy][player.getX() + dx].hasPlayer()
                                 && !board[player.getY() + dy][player.getX() + dx].getPlayer().isActive()))
                     return false;
@@ -158,7 +153,7 @@ public class Game {
 
         for (Tile[] row : board) {
             for (Tile tile : row) {
-                if ((tile.getType() == 'g' && !tile.hasPlayer()) || (tile.hasPlayer() && tile.getType() != 'g')) {
+                if ((tile.getType() == "g" && !tile.hasPlayer()) || (tile.hasPlayer() && tile.getType() != "g")) {
                     return false;
                 }
             }
@@ -167,7 +162,7 @@ public class Game {
         return true;
     }
 
-    public void setType(int x, int y, char set) {
+    public void setType(int x, int y, String set) {
         board[y][x].setType(set);
     }
 

@@ -8,7 +8,7 @@ import java.util.Set;
  */
 public class Tile {
 
-    private char type = ' ';
+    private String type = " ";
     private int x, y;
     private Player player;
 
@@ -20,7 +20,7 @@ public class Tile {
      * fragile: 'f'
      * goal: 'g'
      */
-    private static final Set<Character> VALID_TYPES = Set.of(' ', 'w', 'h', 'f', 'g');
+    private static final Set<String> VALID_TYPES = Set.of(" ", "w", "h", "f", "g");
 
     public Tile(int x, int y) {
         this.x = x;
@@ -31,18 +31,18 @@ public class Tile {
         return player != null;
     }
 
-    public void setType(char type) {
+    public void setType(String type) {
         if (VALID_TYPES.contains(type))
             this.type = type;
     }
 
-    public char getType() {
+    public String getType() {
         return type;
     }
 
     public void setPlayer(Player player) {
-        if (player == null && type == 'f') {
-            this.type = 'h';
+        if (player == null && type == "f") {
+            this.type = "h";
         }
 
         // sjekk om koblingen er riktig allerede

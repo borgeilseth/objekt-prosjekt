@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox style="-fx-background-color: rgb(105,38,21);" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="stickyblocks.GameController">
+<VBox style="-fx-background-color: #5f9dd1;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="stickyblocks.GameController">
    <children>
       <MenuBar>
          <menus>
@@ -61,9 +61,9 @@
       <HBox alignment="CENTER" prefHeight="720.0" prefWidth="1280.0">
         <children>
             
-            <Canvas fx:id="canvas" focusTraversable="true" height="600.0" width="900.0" onKeyPressed="#handleKeyPressed" />
+            <Canvas fx:id="canvas" focusTraversable="true" height="600.0" width="900.0"/>
       
-        </children>
+        </children>  
       </HBox>
    </children>
 </VBox>
