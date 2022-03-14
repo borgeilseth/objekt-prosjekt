@@ -1,10 +1,13 @@
 package stickyblocks;
 
+import java.nio.IntBuffer;
+import java.nio.channels.SelectableChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javafx.animation.AnimationTimer;
@@ -12,7 +15,14 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.effect.Blend;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.ColorInput;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.image.WritablePixelFormat;
 import javafx.scene.paint.Color;
 
 public class GameRenderer extends AnimationTimer {
@@ -32,26 +42,45 @@ public class GameRenderer extends AnimationTimer {
 
     private static HashMap<String, Image> imageFiles = new HashMap<>();
 
-    public GameRenderer(Game game, GraphicsContext gc) {
+    private final static Map<String, Color> defaultColors = Stream.of(new Object[][] {
+            { "bg", Color.web("#080808") },
+            { "w", Color.web("#293141") },
+            { "h", Color.web("#5f9dd1") },
+            { "g", Color.web("#d9396a") },
+            { "p", Color.web("#5c8339") }
+    }).collect(Collectors.toMap(data -> (String) data[0], data -> (Color) data[1]));
 
+    public GameRenderer(GraphicsContext gc) {
         loadAssets();
-
-        this.game = game;
         this.gc = gc;
 
         this.h = gc.getCanvas().getHeight();
         this.w = gc.getCanvas().getWidth();
-        this.tileSize = Math.floor(Math.min(w / game.getWidth(), h / game.getHeight()));
-
     }
 
     @Override
     public void handle(long now) {
+
+        if (game == null) {
+            this.stop();
+            return;
+        }
+
         draw();
 
         delta = now - lastFrameTime;
         lastFrameTime = now;
         frameCount++;
+    }
+
+    public void loadGame(Game game) {
+        gc.clearRect(0, 0, w, h);
+        this.game = game;
+
+        this.tileSize = Math.floor(Math.min(w / game.getWidth(), h / game.getHeight()));
+
+        xOff = (w - (tileSize * game.getWidth())) / 2;
+        yOff = (h - (tileSize * game.getHeight())) / 2;
 
     }
 
@@ -62,13 +91,13 @@ public class GameRenderer extends AnimationTimer {
 
     private void draw() {
         Tile[][] state = game.getBoard();
-        gc.setFill(Color.web("#080808"));
-        gc.fillRect(0, 0, w, h);
+        gc.setFill(defaultColors.get("bg"));
+        gc.fillRect(xOff, yOff, w - (2 * xOff), h - (2 * yOff));
 
         for (int i = 0; i < state.length; i++) {
             for (int j = 0; j < state[0].length; j++) {
-                Double x = j * tileSize;
-                Double y = i * tileSize;
+                Double x = j * tileSize + xOff;
+                Double y = i * tileSize + yOff;
                 Tile tile = state[i][j];
 
                 drawTile(tile, x, y);
@@ -86,6 +115,7 @@ public class GameRenderer extends AnimationTimer {
                 }
             }
         }
+
     }
 
     private void drawImage(String fileName, Color color, double x, double y) {
@@ -95,30 +125,59 @@ public class GameRenderer extends AnimationTimer {
         int animationNumber = ((int) frameCount / 9) % 3 + 1;
         Image img = imageFiles.get(fileName + "_" + animationNumber);
 
+        img = reColor(img, color);
+
         gc.drawImage(img, x, y, tileSize, tileSize);
 
-        gc.setGlobalBlendMode(BlendMode.MULTIPLY);
-        gc.setFill(color);
-        gc.fillRect(x, y, tileSize, tileSize);
-        gc.setGlobalBlendMode(BlendMode.SRC_OVER);
+    }
 
+    public static Image reColor(Image inputImage, Color newColor) {
+        int W = (int) inputImage.getWidth();
+        int H = (int) inputImage.getHeight();
+        WritableImage outputImage = new WritableImage(W, H);
+        PixelReader reader = inputImage.getPixelReader();
+        PixelWriter writer = outputImage.getPixelWriter();
+
+        int nb = (int) (newColor.getBlue() * 255);
+        int nr = (int) (newColor.getRed() * 255);
+        int ng = (int) (newColor.getGreen() * 255);
+
+        for (int y = 0; y < H; y++) {
+            for (int x = 0; x < W; x++) {
+
+                int argb = reader.getArgb(x, y);
+                int a = (argb >> 24) & 0xFF;
+                int r = (argb >> 16) & 0xFF;
+                int g = (argb >> 8) & 0xFF;
+                int b = argb & 0xFF;
+
+                r = r * nr / 255;
+                b = b * nb / 255;
+                g = g * ng / 255;
+
+                argb = (a << 24) | (r << 16) | (g << 8) | b;
+                writer.setArgb(x, y, argb);
+            }
+        }
+        return outputImage;
     }
 
     private void drawTile(Tile tile, double x, double y) {
         String img = "";
-        Color color = Color.WHITE;
+        Color color = Color.GREY;
 
         switch (tile.getType()) {
             case "w":
                 img = bitMasking(tile, "wall");
-                color = Color.web("#293141");
+                color = defaultColors.get("w");
                 break;
             case "h":
                 img = bitMasking(tile, "water");
-                color = Color.web("#5f9dd1");
+                color = defaultColors.get("h");
                 break;
             case "g":
                 img = "goal_0";
+                color = defaultColors.get("g");
                 break;
             case "f":
                 // img = "fragile";
@@ -133,11 +192,10 @@ public class GameRenderer extends AnimationTimer {
 
     private void drawPlayer(Tile tile, double x, double y) {
         String img = "";
-        Color color = Color.WHITESMOKE;
+        Color color = defaultColors.get("p");
 
         if (tile.getPlayer().isActive()) {
             img = "keke_0";
-            color = Color.web("0x5c8339");
         } else {
             img = "keke_15";
         }
@@ -151,16 +209,7 @@ public class GameRenderer extends AnimationTimer {
      * <p>
      * Bithmasking determines the tile ID by counting what neigbours has tiles in
      * the following way
-     * <ul>
-     * <li>North West = 2⁰ = 1</li>
-     * <li>North = 2¹ = 2</li>
-     * <li>North East = 2² = 4</li>
-     * <li>West = 2³ = 8</li>
-     * <li>East = 2⁴ = 16</li>
-     * <li>South West = 2⁵ = 32</li>
-     * <li>South= 2⁶ = 64</li>
-     * <li>South East = 2⁷ = 128</li>
-     * </ul>
+     * 
      * Each neighbour will add its value to a sum which then determines the tile
      * number.
      * 

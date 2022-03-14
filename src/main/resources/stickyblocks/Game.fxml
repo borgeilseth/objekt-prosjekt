@@ -8,19 +8,15 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox style="-fx-background-color: #5f9dd1;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="stickyblocks.GameController">
+<VBox style="-fx-background-color: #081310;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="stickyblocks.GameController">
    <children>
       <MenuBar>
          <menus>
-            <Menu mnemonicParsing="false" text="Pedofil">
+            <Menu mnemonicParsing="false" text="File">
                <items>
                   <MenuItem mnemonicParsing="false" text="New" />
                   <MenuItem mnemonicParsing="false" text="Open…" />
-                  <Menu mnemonicParsing="false" text="Open Recent">
-                     <items>
-                        <MenuItem mnemonicParsing="false" text="Unspecified Action" />
-                        <MenuItem mnemonicParsing="false" text="Unspecified Action" />
-                     </items></Menu>
+                  <Menu mnemonicParsing="false" text="Open Recent" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" text="Close" />
                   <MenuItem mnemonicParsing="false" text="Save" />
@@ -31,6 +27,17 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" text="Quit" />
                </items>
+            </Menu>
+            <Menu id="levelMenu" mnemonicParsing="false" text="Levels">
+              <items>
+                <MenuItem fx:id="1" mnemonicParsing="false" onAction="#handleMenuPress" text="Level 1" />
+                  <MenuItem fx:id="2" mnemonicParsing="false" onAction="#handleMenuPress" text="Level 2" />
+                  <MenuItem fx:id="3" mnemonicParsing="false" onAction="#handleMenuPress" text="Level 3" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <Menu id="customLevelsMenu" mnemonicParsing="false" text="Custom Levels">
+                  
+                  </Menu>
+              </items>
             </Menu>
             <Menu mnemonicParsing="false" text="Edit">
                <items>
@@ -51,17 +58,12 @@
                   <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
                </items>
             </Menu>
-            <Menu mnemonicParsing="false" text="Help">
-               <items>
-                  <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
-               </items>
-            </Menu>
          </menus>
       </MenuBar>
       <HBox alignment="CENTER" prefHeight="720.0" prefWidth="1280.0">
         <children>
             
-            <Canvas fx:id="canvas" focusTraversable="true" height="600.0" width="900.0"/>
+            <Canvas fx:id="canvas" focusTraversable="true" height="600.0" width="900.0" />
       
         </children>  
       </HBox>
