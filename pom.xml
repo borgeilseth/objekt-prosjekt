@@ -4,16 +4,14 @@
     <modelVersion>4.0.0</modelVersion>
  
     <groupId>TDT4100_project</groupId>
-    <artifactId>tdt4100_v2022_prosjekt_boilerplate</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>Game</artifactId>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
  
     <name>tdt4100_v2022_prosjekt_boilerplate</name>
 	
 
    <dependencies>
-
-
 
 	<dependency>
 		<groupId>org.openjfx</groupId>

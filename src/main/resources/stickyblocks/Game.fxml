@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox style="-fx-background-color: #081310;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="stickyblocks.GameController">
+<VBox style="-fx-background-color: #15181f;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="stickyblocks.GameController">
    <children>
       <MenuBar>
          <menus>
@@ -19,7 +19,7 @@
                   <Menu mnemonicParsing="false" text="Open Recent" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" text="Close" />
-                  <MenuItem mnemonicParsing="false" text="Save" />
+                  <MenuItem mnemonicParsing="false" text="Save" onAction="#handleSave" />
                   <MenuItem mnemonicParsing="false" text="Save As…" />
                   <MenuItem mnemonicParsing="false" text="Revert" />
                   <SeparatorMenuItem mnemonicParsing="false" />
@@ -30,9 +30,9 @@
             </Menu>
             <Menu id="levelMenu" mnemonicParsing="false" text="Levels">
               <items>
-                <MenuItem fx:id="1" mnemonicParsing="false" onAction="#handleMenuPress" text="Level 1" />
-                  <MenuItem fx:id="2" mnemonicParsing="false" onAction="#handleMenuPress" text="Level 2" />
-                  <MenuItem fx:id="3" mnemonicParsing="false" onAction="#handleMenuPress" text="Level 3" />
+                <MenuItem fx:id="1" mnemonicParsing="false" onAction="#handleLoad" text="Level 1" />
+                  <MenuItem fx:id="2" mnemonicParsing="false" onAction="#handleLoad" text="Level 2" />
+                  <MenuItem fx:id="3" mnemonicParsing="false" onAction="#handleLoad" text="Level 3" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <Menu id="customLevelsMenu" mnemonicParsing="false" text="Custom Levels">
                   

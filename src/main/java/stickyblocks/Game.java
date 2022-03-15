@@ -107,7 +107,7 @@ public class Game {
         }
 
         for (int i = activePlayers.size() - 1; i >= 0; --i) {
-            if (activePlayers.get(i).getTile().getType() == "h") {
+            if (activePlayers.get(i).getTile().getType().equals("h")) {
 
                 activePlayers.get(i).setTile(null);
                 players.remove(activePlayers.get(i));
@@ -132,8 +132,8 @@ public class Game {
             }
 
             try {
-
-                if (board[player.getY() + dy][player.getX() + dx].getType() == "w" ||
+                System.out.println(board[player.getY() + dy][player.getX() + dx].getType());
+                if ((board[player.getY() + dy][player.getX() + dx].getType().equals("w")) ||
                         (board[player.getY() + dy][player.getX() + dx].hasPlayer()
                                 && !board[player.getY() + dy][player.getX() + dx].getPlayer().isActive()))
                     return false;
@@ -153,7 +153,8 @@ public class Game {
 
         for (Tile[] row : board) {
             for (Tile tile : row) {
-                if ((tile.getType() == "g" && !tile.hasPlayer()) || (tile.hasPlayer() && tile.getType() != "g")) {
+                if ((tile.getType().equals("g") && !tile.hasPlayer())
+                        || (tile.hasPlayer() && !tile.getType().equals("g"))) {
                     return false;
                 }
             }
@@ -198,6 +199,10 @@ public class Game {
         return board;
     }
 
+    public Tile getTile(int x, int y) {
+        return board[y][x];
+    }
+
     @Override
     public String toString() {
 
@@ -212,7 +217,6 @@ public class Game {
             s += String.format("\n%s", i);
             for (Tile tile : row) {
                 s += String.format(" %s", tile);
-                // s += " " + tile.getType();
             }
             i++;
         }

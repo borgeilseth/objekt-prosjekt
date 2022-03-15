@@ -1,35 +1,27 @@
 package stickyblocks;
 
-import java.nio.IntBuffer;
-import java.nio.channels.SelectableChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.effect.Blend;
-import javafx.scene.effect.BlendMode;
-import javafx.scene.effect.ColorAdjust;
-import javafx.scene.effect.ColorInput;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
-import javafx.scene.image.WritablePixelFormat;
 import javafx.scene.paint.Color;
 
 public class GameRenderer extends AnimationTimer {
 
     private long delta;
     private long lastFrameTime;
-    private long frameCount = 0;
+    private int frameCount = 0;
 
     private Game game;
     private GraphicsContext gc;
@@ -38,9 +30,12 @@ public class GameRenderer extends AnimationTimer {
     private double xOff, yOff;
     private double tileSize;
 
+    private int[][] animationNumbers;
+
     private static String imgFolderPath;
 
     private static HashMap<String, Image> imageFiles = new HashMap<>();
+    private static HashMap<String, Color> levelColors = new HashMap<>();
 
     private final static Map<String, Color> defaultColors = Stream.of(new Object[][] {
             { "bg", Color.web("#080808") },
@@ -82,6 +77,13 @@ public class GameRenderer extends AnimationTimer {
         xOff = (w - (tileSize * game.getWidth())) / 2;
         yOff = (h - (tileSize * game.getHeight())) / 2;
 
+        animationNumbers = new int[game.getHeight()][game.getWidth()];
+
+        for (int i = 0; i < animationNumbers.length; i++) {
+            for (int j = 0; j < animationNumbers[i].length; j++) {
+                animationNumbers[i][j] = ThreadLocalRandom.current().nextInt(1, 3 + 1);
+            }
+        }
     }
 
     public double getFrameRateHertz() {
@@ -91,24 +93,19 @@ public class GameRenderer extends AnimationTimer {
 
     private void draw() {
         Tile[][] state = game.getBoard();
-        gc.setFill(defaultColors.get("bg"));
+        gc.setFill(getColor("bg"));
         gc.fillRect(xOff, yOff, w - (2 * xOff), h - (2 * yOff));
 
-        for (int i = 0; i < state.length; i++) {
-            for (int j = 0; j < state[0].length; j++) {
-                Double x = j * tileSize + xOff;
-                Double y = i * tileSize + yOff;
-                Tile tile = state[i][j];
-
+        for (int y = 0; y < state.length; y++) {
+            for (int x = 0; x < state[0].length; x++) {
+                Tile tile = state[y][x];
                 drawTile(tile, x, y);
             }
         }
 
-        for (int i = 0; i < state.length; i++) {
-            for (int j = 0; j < state[0].length; j++) {
-                Double x = j * tileSize + xOff;
-                Double y = i * tileSize + yOff;
-                Tile tile = state[i][j];
+        for (int y = 0; y < state.length; y++) {
+            for (int x = 0; x < state[0].length; x++) {
+                Tile tile = state[y][x];
 
                 if (tile.hasPlayer()) {
                     drawPlayer(tile, x, y);
@@ -118,20 +115,24 @@ public class GameRenderer extends AnimationTimer {
 
     }
 
-    private void drawImage(String fileName, Color color, double x, double y) {
-        if (fileName == "")
+    private void drawImage(String fileName, Color color, int x, int y) {
+        if (fileName.equals(""))
             return;
 
-        int animationNumber = ((int) frameCount / 9) % 3 + 1;
+        int animationNumber = (animationNumbers[y][x] + (frameCount / 9)) % 3 + 1;
+
         Image img = imageFiles.get(fileName + "_" + animationNumber);
 
         img = reColor(img, color);
 
-        gc.drawImage(img, x, y, tileSize, tileSize);
+        Double xCoord = x * tileSize + xOff;
+        Double yCoord = y * tileSize + yOff;
+
+        gc.drawImage(img, xCoord, yCoord, tileSize, tileSize);
 
     }
 
-    public static Image reColor(Image inputImage, Color newColor) {
+    private Image reColor(Image inputImage, Color newColor) {
         int W = (int) inputImage.getWidth();
         int H = (int) inputImage.getHeight();
         WritableImage outputImage = new WritableImage(W, H);
@@ -162,22 +163,20 @@ public class GameRenderer extends AnimationTimer {
         return outputImage;
     }
 
-    private void drawTile(Tile tile, double x, double y) {
+    private void drawTile(Tile tile, int x, int y) {
         String img = "";
-        Color color = Color.GREY;
+        String type = tile.getType();
+        Color color = getColor(type);
 
-        switch (tile.getType()) {
+        switch (type) {
             case "w":
                 img = bitMasking(tile, "wall");
-                color = defaultColors.get("w");
                 break;
             case "h":
                 img = bitMasking(tile, "water");
-                color = defaultColors.get("h");
                 break;
             case "g":
                 img = "goal_0";
-                color = defaultColors.get("g");
                 break;
             case "f":
                 // img = "fragile";
@@ -187,12 +186,11 @@ public class GameRenderer extends AnimationTimer {
         }
 
         drawImage(img, color, x, y);
-
     }
 
-    private void drawPlayer(Tile tile, double x, double y) {
+    private void drawPlayer(Tile tile, int x, int y) {
         String img = "";
-        Color color = defaultColors.get("p");
+        Color color = getColor("p");
 
         if (tile.getPlayer().isActive()) {
             img = "keke_0";
@@ -225,7 +223,7 @@ public class GameRenderer extends AnimationTimer {
         Tile[][] board = game.getBoard();
         String type = tile.getType();
         String filename = typeName + "_";
-        int n = 0, x = tile.getX(), y = tile.getY();
+        int x = tile.getX(), y = tile.getY();
 
         /*
          * Returns the tile index after checking all 8 positions around the tile.
@@ -235,11 +233,10 @@ public class GameRenderer extends AnimationTimer {
         int index, north_tile, south_tile, west_tile, east_tile;
 
         // Directional Check, including corners, returns Boolean
-        north_tile = (getType(x, y - 1, board) == type) ? 1 : 0;
-
-        south_tile = (getType(x, y + 1, board) == type) ? 1 : 0;
-        west_tile = (getType(x + 1, y, board) == type) ? 1 : 0;
-        east_tile = (getType(x - 1, y, board) == type) ? 1 : 0;
+        north_tile = (getType(x, y - 1, board).equals(type)) ? 1 : 0;
+        south_tile = (getType(x, y + 1, board).equals(type)) ? 1 : 0;
+        west_tile = (getType(x + 1, y, board).equals(type)) ? 1 : 0;
+        east_tile = (getType(x - 1, y, board).equals(type)) ? 1 : 0;
 
         index = west_tile + 2 * north_tile + 4 * east_tile + 8 * south_tile;
 
@@ -247,10 +244,26 @@ public class GameRenderer extends AnimationTimer {
     }
 
     private String getType(int x, int y, Tile[][] board) {
-        if (x < 0 || y < 0 || x >= board[0].length || y >= board.length) {
-            return null;
+        if (x < 0 || x >= board[0].length) {
+            int normX = x < 0 ? 0 : board[0].length - 1;
+            return board[y][normX].getType();
+        } else if (y < 0 || y >= board.length) {
+            int normY = y < 0 ? 0 : board.length - 1;
+            return board[normY][x].getType();
         }
         return game.getBoard()[y][x].getType();
+    }
+
+    public static void addColor(String key, Color color) {
+        levelColors.put(key, color);
+    }
+
+    public Color getColor(String color) {
+        return levelColors.getOrDefault(color, defaultColors.get(color));
+    }
+
+    public static HashMap<String, Color> getLevelColors() {
+        return levelColors;
     }
 
     private void loadAssets() {

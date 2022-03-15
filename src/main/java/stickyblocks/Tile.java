@@ -14,17 +14,18 @@ public class Tile {
 
     /**
      * Characters define the type and state of each tile
-     * empty: ' ',
+     * empty: '-',
      * wall: 'w',
      * hole: 'h',
      * fragile: 'f'
      * goal: 'g'
      */
-    private static final Set<String> VALID_TYPES = Set.of(" ", "w", "h", "f", "g");
+    private static final Set<String> VALID_TYPES = Set.of("-", "w", "h", "f", "g");
 
     public Tile(int x, int y) {
         this.x = x;
         this.y = y;
+        this.setType("-");
     }
 
     public boolean hasPlayer() {
@@ -32,8 +33,11 @@ public class Tile {
     }
 
     public void setType(String type) {
-        if (VALID_TYPES.contains(type))
+        if (VALID_TYPES.contains(type)) {
             this.type = type;
+        } else {
+            this.type = "-";
+        }
     }
 
     public String getType() {
