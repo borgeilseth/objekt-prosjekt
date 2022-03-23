@@ -1,21 +1,20 @@
 package stickyblocks;
 
-
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.event.EventTarget;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
+
+import org.apache.commons.io.FilenameUtils;
 
 public class GameController {
 
@@ -31,8 +30,9 @@ public class GameController {
 
     public GraphicsContext gc;
 
+
     @FXML
-    public MenuItem level1, level2, level3, level4, level5;
+    public Menu levels, customLevels;
 
     @FXML
     private void initialize() {
@@ -42,7 +42,53 @@ public class GameController {
 
         initEventHandlers();
 
+        try {
+            addLevelMenus("levels", levels);
+            System.out.println("\n");
+            addLevelMenus("levels/customLevels", customLevels);
+        } catch (URISyntaxException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
         renderer = new GameRenderer(gc);
+
+    }
+
+    private void addLevelMenus(String path, Menu menu) throws URISyntaxException {
+
+        URI pathString = GameController.class.getResource(path).toURI();
+        System.out.println(pathString);
+
+        File dir = new File(pathString);
+
+        int i = 1;
+        for (File file : dir.listFiles()) {
+
+            if (file.isDirectory())
+                continue;
+
+            System.out.println(file);
+
+            String fileName = FilenameUtils.removeExtension(file.getName());
+
+            MenuItem menuItem = new MenuItem(fileName);
+            menuItem.setOnAction(e -> {
+                handleLoad(e);
+            });
+
+            menu.getItems().add(i - 1, menuItem);
+
+            i++;
+        }
+
+        // for (File file : dir.listFiles()) {
+        // if (file.isDirectory()) {
+        // System.out.println("Directory: " + file.getAbsolutePath());
+        // } else {
+        // System.out.println("File: " + file.getAbsolutePath());
+        // }
+        // }
 
     }
 
@@ -56,12 +102,8 @@ public class GameController {
     }
 
 
-
-    @FXML
     public void handleLoad(ActionEvent e) {
-
         GameRenderer.getLevelColors().clear();
-
         String name = ((MenuItem) e.getSource()).getText();
 
         try {
@@ -121,6 +163,7 @@ public class GameController {
             }
         }
     };
+
 
 
 }

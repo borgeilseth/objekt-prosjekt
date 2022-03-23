@@ -69,6 +69,7 @@ public class GameRenderer extends AnimationTimer {
     }
 
     public void loadGame(Game game) {
+
         gc.clearRect(0, 0, w, h);
         this.game = game;
 

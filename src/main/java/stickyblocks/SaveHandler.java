@@ -39,7 +39,7 @@ public class SaveHandler implements ISavheHandler {
     }
 
     private String getFilePath(String filename) {
-        return SaveHandler.class.getResource("saves/").getFile() + filename + ".txt";
+        return SaveHandler.class.getResource("levels/").getFile() + filename + ".txt";
     }
 
     public Game load(String filename) throws FileNotFoundException {

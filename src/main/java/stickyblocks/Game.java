@@ -222,8 +222,6 @@ public class Game {
         }
 
         return s + "\n";
-        // return "Game [board=" + Arrays.toString(board) + ", isGameOver=" + isGameOver
-        // + ", players=" + players + "]";
     }
 
 }
