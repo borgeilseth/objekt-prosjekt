@@ -19,9 +19,9 @@ import javafx.scene.paint.Color;
 
 public class GameRenderer extends AnimationTimer {
 
-    private long delta;
-    private long lastFrameTime;
-    private int frameCount = 0;
+    private int moveDir = 0, moveNumber = 0;
+
+    private int[][] animationNumbers;
 
     private Game game;
     private GraphicsContext gc;
@@ -30,20 +30,21 @@ public class GameRenderer extends AnimationTimer {
     private double xOff, yOff;
     private double tileSize;
 
-    private int[][] animationNumbers;
-
     private static String imgFolderPath;
 
     private static HashMap<String, Image> imageFiles = new HashMap<>();
     private static HashMap<String, Color> levelColors = new HashMap<>();
 
-    private final static Map<String, Color> defaultColors = Stream.of(new Object[][] {
-            { "bg", Color.web("#080808") },
-            { "w", Color.web("#293141") },
-            { "h", Color.web("#5f9dd1") },
-            { "g", Color.web("#d9396a") },
-            { "p", Color.web("#5c8339") }
-    }).collect(Collectors.toMap(data -> (String) data[0], data -> (Color) data[1]));
+    private final static Map<String, Color> defaultColors;
+
+    static {
+        defaultColors = new HashMap<>();
+        defaultColors.put("bg", Color.web("#080808"));
+        defaultColors.put("w", Color.web("#293141"));
+        defaultColors.put("h", Color.web("#5f9dd1"));
+        defaultColors.put("g", Color.web("#d9396a"));
+        defaultColors.put("p", Color.web("#5c8339"));
+    }
 
     public GameRenderer(GraphicsContext gc) {
         loadAssets();
@@ -62,10 +63,6 @@ public class GameRenderer extends AnimationTimer {
         }
 
         draw();
-
-        delta = now - lastFrameTime;
-        lastFrameTime = now;
-        frameCount++;
     }
 
     public void loadGame(Game game) {
@@ -85,11 +82,6 @@ public class GameRenderer extends AnimationTimer {
                 animationNumbers[i][j] = ThreadLocalRandom.current().nextInt(1, 3 + 1);
             }
         }
-    }
-
-    public double getFrameRateHertz() {
-        double frameRate = 1d / delta;
-        return frameRate * 1e9;
     }
 
     private void draw() {
@@ -120,7 +112,9 @@ public class GameRenderer extends AnimationTimer {
         if (fileName.equals(""))
             return;
 
-        int animationNumber = (animationNumbers[y][x] + (frameCount / 9)) % 3 + 1;
+        // int animationNumber = (animationNumbers[y][x] + (frameCount / 9)) % 3 + 1;
+
+        int animationNumber = animationNumbers[y][x];
 
         Image img = imageFiles.get(fileName + "_" + animationNumber);
 

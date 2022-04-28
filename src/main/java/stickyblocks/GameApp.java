@@ -18,6 +18,7 @@ public class GameApp extends Application {
 
         primaryStage.setTitle("StickyBlocks");
         primaryStage.setScene(new Scene(FXMLLoader.load(getClass().getResource("Game.fxml"))));
+        primaryStage.setMaximized(true);
         primaryStage.show();
     }
 

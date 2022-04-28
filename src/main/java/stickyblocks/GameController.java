@@ -30,7 +30,6 @@ public class GameController {
 
     public GraphicsContext gc;
 
-
     @FXML
     public Menu levels, customLevels;
 
@@ -38,7 +37,6 @@ public class GameController {
     private void initialize() {
 
         initContext();
-
 
         initEventHandlers();
 
@@ -101,13 +99,16 @@ public class GameController {
         canvas.setOnKeyPressed(handleKeyPressed);
     }
 
-
     public void handleLoad(ActionEvent e) {
         GameRenderer.getLevelColors().clear();
-        String name = ((MenuItem) e.getSource()).getText();
+        String level = ((MenuItem) e.getSource()).getText();
+        loadGame(level);
+    }
 
+    private void loadGame(String level) {
         try {
-            this.game = saveHandler.load(name);
+            this.game = saveHandler.load(level);
+
         } catch (FileNotFoundException exception) {
             System.err.println("Savefile not found\n" + exception.getLocalizedMessage());
             return;
@@ -117,9 +118,7 @@ public class GameController {
         renderer.start();
         canvas.requestFocus();
 
-        currentLevel = ((MenuItem) e.getSource()).getText();
-
-        System.out.println(game);
+        currentLevel = level;
     }
 
     @FXML
@@ -131,7 +130,6 @@ public class GameController {
             System.err.println("Could not save file");
         }
     }
-
 
     private EventHandler<KeyEvent> handleKeyPressed = new EventHandler<KeyEvent>() {
         @Override
@@ -156,14 +154,14 @@ public class GameController {
                 case A:
                     game.moveLeft();
                     break;
-
+                case R:
+                    loadGame(currentLevel);
+                    break;
                 default:
                     break;
 
             }
         }
     };
-
-
 
 }
