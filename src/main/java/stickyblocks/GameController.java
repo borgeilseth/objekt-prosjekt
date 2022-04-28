@@ -72,7 +72,7 @@ public class GameController {
                 item.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent event) {
-                        handleLoad(event);
+                        loadGameButtonPress(event);
                     }
                 });
 
@@ -113,12 +113,15 @@ public class GameController {
         canvas.setOnKeyPressed(handleKeyPressed);
     }
 
-    public void handleLoad(ActionEvent e) {
+    public void loadGameButtonPress(ActionEvent e) {
         GameRenderer.getLevelColors().clear();
-        String id = ((MenuItem) e.getSource()).getId();
+        String fileName = ((MenuItem) e.getSource()).getId();
+        loadGame(fileName);
+    }
 
+    public void loadGame(String filename) {
         try {
-            this.game = saveHandler.load(id);
+            this.game = saveHandler.load(filename);
         } catch (FileNotFoundException exception) {
             System.err.println("Savefile not found\n" + exception.getLocalizedMessage());
             return;
@@ -128,8 +131,7 @@ public class GameController {
         renderer.start();
         canvas.requestFocus();
 
-        currentLevel = ((MenuItem) e.getSource()).getText();
-
+        currentLevel = filename;
     }
 
     @FXML
@@ -165,7 +167,9 @@ public class GameController {
                 case A:
                     game.moveLeft();
                     break;
-
+                case R:
+                    loadGame(currentLevel);
+                    break;
                 default:
                     break;
 
