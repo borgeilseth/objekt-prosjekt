@@ -1,10 +1,10 @@
 package stickyblocks;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
-public class Game {
+public class Game implements Iterable<Tile> {
 
     private Tile[][] board;
     private ArrayList<Player> players = new ArrayList<>();
@@ -20,32 +20,31 @@ public class Game {
      *               Indexed at zero.
      */
     public Game(int width, int height) {
-        board = new Tile[height + 1][width + 1];
+        if (width < 1 || height < 1) {
+            throw new IllegalArgumentException("Width and height must be greater than zero.");
+        }
 
-        for (int y = 0; y <= height; y++) {
-            for (int x = 0; x <= width; x++) {
+        board = new Tile[height][width];
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 board[y][x] = new Tile(x, y);
             }
         }
     }
 
     public void createPlayer(Tile tile) {
-        createPlayer(Arrays.asList(tile));
+        Player player = new Player(tile);
+        players.add(player);
     }
 
     public void createPlayer(int x, int y) {
-        List<Tile> tiles = Arrays.asList(new Tile(x, y));
-        createPlayer(tiles);
+        createPlayer(board[y][x]);
     }
 
     public void createPlayer(List<Tile> tiles) {
-
-        for (Tile newTile : tiles) {
-            int x = newTile.getX();
-            int y = newTile.getY();
-
-            Player player = new Player(board[y][x]);
-            players.add(player);
+        for (Tile tile : tiles) {
+            createPlayer(tile);
         }
     }
 
@@ -55,7 +54,6 @@ public class Game {
         for (Player player : players) {
             if (player.isActive())
                 activePlayers.add(player);
-
         }
 
         if (!canMove(dx, dy) || gameIsWon) {
@@ -93,9 +91,7 @@ public class Game {
                         Tile neighborTile = board[player.getY() + j][player.getX() + i];
 
                         if (neighborTile.hasPlayer()) {
-
                             neighborTile.getPlayer().setActive();
-
                         }
                     } catch (ArrayIndexOutOfBoundsException e) {
                         continue;
@@ -109,8 +105,8 @@ public class Game {
         for (int i = activePlayers.size() - 1; i >= 0; --i) {
             if (activePlayers.get(i).getTile().getType().equals("h")) {
 
-                activePlayers.get(i).setTile(null);
                 players.remove(activePlayers.get(i));
+                activePlayers.get(i).setTile(null);
                 activePlayers.remove(i);
 
             }
@@ -132,13 +128,10 @@ public class Game {
             }
 
             try {
-                System.out.println(board[player.getY() + dy][player.getX() + dx].getType());
                 if ((board[player.getY() + dy][player.getX() + dx].getType().equals("w")) ||
                         (board[player.getY() + dy][player.getX() + dx].hasPlayer()
                                 && !board[player.getY() + dy][player.getX() + dx].getPlayer().isActive()))
                     return false;
-
-                // Inn i en annen spiller
 
             } catch (Exception e) {
                 continue;
@@ -224,4 +217,32 @@ public class Game {
         return s + "\n";
     }
 
+    @Override
+    public Iterator<Tile> iterator() {
+        return new Iterator<Tile>() {
+            int x = 0;
+            int y = 0;
+
+            @Override
+            public boolean hasNext() {
+                return x < board.length && y < board[0].length;
+            }
+
+            @Override
+            public Tile next() {
+                Tile tile = board[y][x];
+                x++;
+                if (x >= board[0].length) {
+                    x = 0;
+                    y++;
+                }
+                return tile;
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    };
 }

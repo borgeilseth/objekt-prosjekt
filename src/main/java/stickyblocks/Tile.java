@@ -95,4 +95,13 @@ public class Tile {
         return String.valueOf(type);
     }
 
+    @Override
+    public boolean equals(Object arg0) {
+        if (arg0 instanceof Tile) {
+            Tile other = (Tile) arg0;
+            return this.x == other.x && this.y == other.y && this.type.equals(other.type)
+                    && this.player == other.player;
+        }
+        return false;
+    }
 }

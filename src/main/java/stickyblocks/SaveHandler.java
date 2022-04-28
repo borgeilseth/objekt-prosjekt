@@ -3,6 +3,8 @@ package stickyblocks;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Scanner;
 import java.util.Map.Entry;
 
@@ -15,10 +17,14 @@ public class SaveHandler implements ISavheHandler {
             writer.println(game.getWidth());
             writer.println(game.getHeight());
 
-            for (int y = 0; y < game.getHeight(); y++) {
-                for (int x = 0; x < game.getWidth(); x++) {
-                    writer.print(game.getTile(x, y).getType());
-                }
+            // for (int y = 0; y < game.getHeight(); y++) {
+            // for (int x = 0; x < game.getWidth(); x++) {
+            // writer.print(game.getTile(x, y).getType());
+            // }
+            // }
+
+            for (Tile tile : game) {
+                writer.println(tile.getType());
             }
 
             writer.println(game.getPlayers().size());
@@ -34,28 +40,31 @@ public class SaveHandler implements ISavheHandler {
             }
 
             writer.println("-");
-
+        } catch (Exception e) {
+            System.err.println("Error saving game: " + e.getMessage());
+            throw new FileNotFoundException();
         }
     }
 
-    private String getFilePath(String filename) {
-        return SaveHandler.class.getResource("levels/").getFile() + filename + ".txt";
+    public URI getFilePath(String filename) throws URISyntaxException {
+        return SaveHandler.class.getResource(filename).toURI();
     }
 
     public Game load(String filename) throws FileNotFoundException {
         try (Scanner scanner = new Scanner(new File(getFilePath(filename)))) {
+
             int width = scanner.nextInt();
             int height = scanner.nextInt();
             scanner.nextLine();
 
             String board = scanner.next();
             if (board.length() != width * height) {
-                throw new FileNotFoundException("Size of map must be equal to the given size of the board");
+                throw new FileNotFoundException("Size of map," + width * height
+                        + ", must be equal to the given size of the board," + board.length());
             }
 
-            Game game = new Game(width - 1, height - 1);
+            Game game = new Game(width, height);
 
-            System.out.println(board);
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     String symbol = String.valueOf(board.charAt(y * width + x));
@@ -76,8 +85,6 @@ public class SaveHandler implements ISavheHandler {
                 next = scanner.next();
             }
 
-            System.out.println(scanner.nextLine());
-
             next = scanner.next();
 
             while (!next.equals("-")) {
@@ -86,6 +93,9 @@ public class SaveHandler implements ISavheHandler {
             }
 
             return game;
+        } catch (Exception e) {
+            System.err.println("\n" + e.getMessage());
+            throw new FileNotFoundException("Could not load level: " + filename);
         }
     }
 }
