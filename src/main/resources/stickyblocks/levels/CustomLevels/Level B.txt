@@ -1,0 +1,11 @@
+6
+6
+---h------------------------w----gwg
+0 0 true
+2 0 false
+0 2 false
+-
+p yellow
+bg wheat
+h cyan
+-

@@ -1,0 +1,9 @@
+5
+5
+-fff--g--f-gggfhffff-----
+0 0 false
+0 4 true
+4 0 false
+4 4 false
+-
+-
