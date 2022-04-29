@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,12 +17,7 @@ import org.junit.jupiter.api.Test;
 // Unit test for Game.java
 class GameTest {
 
-    private Game game;
-
-    @BeforeEach
-    void setUp() {
-        game = new Game(4, 4);
-    }
+    private Game game = new Game(4, 4);;
 
     @Test
     void testConstructor() {
@@ -76,7 +72,7 @@ class GameTest {
     }
 
     @Test
-    void moveDown() {
+    void testMoveDown() {
         game.createPlayer(0, 1);
         game.createPlayer(1, 1);
         game.createPlayer(2, 1);
@@ -94,7 +90,7 @@ class GameTest {
     }
 
     @Test
-    void moveUp() {
+    void testMoveUp() {
         game.createPlayer(0, 1);
         game.createPlayer(1, 1);
         game.createPlayer(2, 1);
@@ -112,7 +108,7 @@ class GameTest {
     }
 
     @Test
-    void moveLeft() {
+    void testMoveLeft() {
         game.createPlayer(1, 0);
         game.createPlayer(1, 1);
         game.createPlayer(1, 2);
@@ -152,6 +148,79 @@ class GameTest {
                 assertNotEquals(null, game.getTile(x, y));
             }
         }
+    }
+
+    @Test
+    void testIsWin() {
+        game.createPlayer(0, 0);
+        game.createPlayer(1, 0);
+        game.createPlayer(2, 0);
+        game.createPlayer(3, 0);
+
+        game.setType(0, 3, "g");
+        game.setType(1, 3, "g");
+        game.setType(2, 3, "g");
+        game.setType(3, 3, "g");
+
+        for (Player player : game.getPlayers()) {
+            player.setActive();
+        }
+
+        assertEquals(false, game.isWin());
+
+        game.moveDown();
+        assertEquals(false, game.isWin());
+
+        game.moveDown();
+        assertEquals(false, game.isWin());
+
+        game.moveDown();
+        assertEquals(true, game.isWin());
+    }
+
+    @Test
+    void testIterator() {
+
+        Iterator<Tile> iterator = game.iterator();
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(0, 0), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(1, 0), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(2, 0), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(3, 0), iterator.next());
+
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(0, 1), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(1, 1), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(2, 1), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(3, 1), iterator.next());
+
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(0, 2), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(1, 2), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(2, 2), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(3, 2), iterator.next());
+
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(0, 3), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(1, 3), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(2, 3), iterator.next());
+        assertEquals(true, iterator.hasNext());
+        assertEquals(new Tile(3, 3), iterator.next());
+
+        assertEquals(false, iterator.hasNext());
+
+        assertThrows(ArrayIndexOutOfBoundsException.class, () -> iterator.next());
     }
 
 }

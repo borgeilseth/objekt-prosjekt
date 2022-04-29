@@ -17,7 +17,6 @@ public class GameApp extends Application {
     public void start(Stage primaryStage) throws IOException {
         primaryStage.setTitle("StickyBlocks");
         primaryStage.setScene(new Scene(FXMLLoader.load(getClass().getResource("Game.fxml"))));
-        primaryStage.setMaximized(true);
         primaryStage.show();
     }
 

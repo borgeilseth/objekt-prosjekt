@@ -201,4 +201,6 @@ buildNumber.properties
 # ignore sprite folder
 src/main/resources/stickyblocks/Sprites
 
+.DS_Store
+
 # End of https://www.gitignore.io/api/java,maven,eclipse,intellij+all,visualstudiocode

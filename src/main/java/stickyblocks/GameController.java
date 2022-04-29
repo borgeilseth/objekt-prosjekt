@@ -6,6 +6,8 @@ import java.net.URISyntaxException;
 
 import org.apache.commons.io.FilenameUtils;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -15,95 +17,126 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.text.Text;
 
 public class GameController {
 
     private Game game;
-    private String currentLevel = "level";
+    private String currentLevelName, currentLevelPath;
 
-    private SaveHandler saveHandler = new SaveHandler();
+    private final SaveHandler saveHandler = new SaveHandler();
 
     private GameRenderer renderer;
 
     @FXML
     public Canvas canvas;
-
     public GraphicsContext gc;
 
     @FXML
-    public Menu levels, customLevels;
+    public Menu levels;
+
+    @FXML
+    public MenuItem quit, save;
+
+    @FXML
+    public Text textBox;
 
     @FXML
     private void initialize() {
-
         initContext();
-
         initEventHandlers();
-
         try {
             addLevelMenus("levels", levels);
-        } catch (URISyntaxException e) {
+        } catch (final URISyntaxException e) {
             e.printStackTrace();
         }
-
         renderer = new GameRenderer(gc);
-
     }
 
-    private void addLevelMenus(String path, Menu menu) throws URISyntaxException {
-        String pathString = GameController.class.getResource(path).getFile();
+    // Add level buttons to the menu bar
+    private void addLevelMenus(final String path, final Menu menu) throws URISyntaxException {
+        final ObservableList<MenuItem> items = FXCollections.observableArrayList();
+        menu.getItems().clear();
 
-        File dir = new File(pathString);
+        // Collect the folder of the levels
+        final String pathString = GameController.class.getResource(path).getFile();
+        final File dir = new File(pathString);
 
-        for (File file : dir.listFiles()) {
-
+        // Iterate over the files in the folder
+        for (final File file : dir.listFiles()) {
             if (file.isDirectory()) {
-                Menu subMenu = new Menu(FilenameUtils.getBaseName(file.getName()));
+                // if the file is a folder, add a submenu
+                final Menu subMenu = new Menu(FilenameUtils.getBaseName(file.getName()));
                 addLevelMenus(path + "/" + file.getName(), subMenu);
                 if (!subMenu.getItems().isEmpty()) {
-                    menu.getItems().add(subMenu);
+                    items.add(subMenu);
+                    // menu.getItems().add(subMenu);
                 }
             } else {
-                String levelName = FilenameUtils.getBaseName(file.getName());
+                // if the file is a level, add a button with the name of the level
+                final String levelName = FilenameUtils.getBaseName(file.getName());
+                final MenuItem item = new MenuItem(levelName);
 
-                MenuItem item = new MenuItem(levelName);
-
-                item.setId(path + "/" + file.getName());
+                String levelPath;
+                if (path == "levels") {
+                    levelPath = "/" + levelName;
+                } else {
+                    // if the level is in a subfolder, add it to the submenu
+                    levelPath = path.substring(7) + "/" + levelName;
+                }
+                // Set the id to the path of the level, and add the event handler
+                item.setId(levelPath);
                 item.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
-                    public void handle(ActionEvent event) {
+                    public void handle(final ActionEvent event) {
                         loadGameButtonPress(event);
                     }
                 });
 
+                // Add a separator between the levels and the submenus
                 try {
                     saveHandler.load(item.getId());
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     System.err.println("Could not load level: " + item.getId());
                     continue;
                 }
-
-                menu.getItems().add(item);
+                items.add(item);
             }
         }
-        game = null;
 
-        // Sort menu items such that the standard levels are first
-        menu.getItems().sort((MenuItem o1, MenuItem o2) -> {
-            return o1.getText().compareTo(o2.getText());
+        // Sort menu items such that the standard levels are first in alphabetical order
+        // menu.getItems().sort((MenuItem o1, MenuItem o2) -> {
+        items.sort((final MenuItem o1, final MenuItem o2) -> {
+            // Sort menuitems before menus (submenus), and then alphabetically
+            if (o1 instanceof Menu && o2 instanceof Menu) {
+                return o1.getText().compareTo(o2.getText());
+            } else if (o1 instanceof Menu) {
+                return 1;
+            } else if (o2 instanceof Menu) {
+                return -1;
+            } else {
+                if (o1.getText().length() > o2.getText().length()) {
+                    return 1;
+                } else if (o1.getText().length() < o2.getText().length()) {
+                    return -1;
+                } else {
+                    return o1.getText().compareTo(o2.getText());
+                }
+            }
         });
 
         int index = 0;
-        for (MenuItem item : menu.getItems()) {
+        for (final MenuItem item : items) {
             if (item instanceof Menu) {
-                menu.getItems().add(index, new SeparatorMenuItem());
+                items.add(index, new SeparatorMenuItem());
                 break;
             }
             index++;
         }
-
+        menu.getItems().addAll(items);
     }
 
+    // Initialize the graphics context
     private void initContext() {
         gc = canvas.getGraphicsContext2D();
         gc.setImageSmoothing(false);
@@ -113,16 +146,24 @@ public class GameController {
         canvas.setOnKeyPressed(handleKeyPressed);
     }
 
-    public void loadGameButtonPress(ActionEvent e) {
+    // Load a level when the a menu item is pressed
+    public void loadGameButtonPress(final ActionEvent e) {
         GameRenderer.getLevelColors().clear();
-        String fileName = ((MenuItem) e.getSource()).getId();
+        final String fileName = ((MenuItem) e.getSource()).getId();
         loadGame(fileName);
+        // levels.getItems().clear();
+        try {
+            addLevelMenus("levels", levels);
+        } catch (final URISyntaxException e1) {
+            e1.printStackTrace();
+        }
     }
 
-    public void loadGame(String filename) {
+    // Load a level from a filepath
+    public void loadGame(final String filename) {
         try {
             this.game = saveHandler.load(filename);
-        } catch (FileNotFoundException exception) {
+        } catch (final FileNotFoundException exception) {
             System.err.println("Savefile not found\n" + exception.getLocalizedMessage());
             return;
         }
@@ -130,49 +171,71 @@ public class GameController {
         renderer.loadGame(game);
         renderer.start();
         canvas.requestFocus();
+        currentLevelPath = filename;
+        currentLevelName = FilenameUtils.getBaseName(filename);
+        textBox.setText(currentLevelName);
 
-        currentLevel = filename;
     }
 
+    // Save the current game to the save folder
     @FXML
-    public void handleSave(ActionEvent e) {
+    public void handleSave(final ActionEvent e) {
         try {
-            saveHandler.save(currentLevel, game);
+            saveHandler.save("saves/" + currentLevelName, game);
             System.out.println("Saved File");
-        } catch (FileNotFoundException exception) {
+            addLevelMenus("levels", levels);
+        } catch (final FileNotFoundException exception) {
             System.err.println("Could not save file");
+        } catch (final URISyntaxException e1) {
+            e1.printStackTrace();
         }
     }
 
-    private EventHandler<KeyEvent> handleKeyPressed = new EventHandler<KeyEvent>() {
+    // Quit the game
+    @FXML
+    public void handleQuit(final ActionEvent e) {
+        System.exit(0);
+    }
+
+    // Key pressed event handler
+    private final EventHandler<KeyEvent> handleKeyPressed = new EventHandler<KeyEvent>() {
         @Override
-        public void handle(KeyEvent e) {
+        public void handle(final KeyEvent e) {
+
+            if (game == null) {
+                return;
+            }
+
             switch (e.getCode()) {
                 case RIGHT:
                 case D:
-                    game.moveRight();
+                    if (game.moveRight())
+                        renderer.moveRight();
                     break;
-
                 case UP:
                 case W:
-                    game.moveUp();
+                    if (game.moveUp())
+                        renderer.moveUp();
                     break;
-
                 case DOWN:
                 case S:
-                    game.moveDown();
+                    if (game.moveDown())
+                        renderer.moveDown();
                     break;
-
                 case LEFT:
                 case A:
-                    game.moveLeft();
+                    if (game.moveLeft())
+                        renderer.moveLeft();
                     break;
                 case R:
-                    loadGame(currentLevel);
+                    loadGame(currentLevelPath);
                     break;
                 default:
                     break;
 
+            }
+            if (game != null && game.isWin()) {
+                textBox.setText("You win!");
             }
         }
     };

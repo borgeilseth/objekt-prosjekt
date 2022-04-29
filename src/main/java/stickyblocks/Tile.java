@@ -45,8 +45,8 @@ public class Tile {
     }
 
     public void setPlayer(Player player) {
-        if (player == null && type == "f") {
-            this.type = "h";
+        if (hasPlayer() && player == null && type.equals("f")) {
+            setType("h");
         }
 
         // sjekk om koblingen er riktig allerede
@@ -64,14 +64,6 @@ public class Tile {
         if (this.player != null) {
             this.player.setTile(this);
         }
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
     }
 
     public Player getPlayer() {
@@ -99,9 +91,9 @@ public class Tile {
     public boolean equals(Object arg0) {
         if (arg0 instanceof Tile) {
             Tile other = (Tile) arg0;
-            return this.x == other.x && this.y == other.y && this.type.equals(other.type)
-                    && this.player == other.player;
+            return this.x == other.x && this.y == other.y && this.type.equals(other.type);
         }
         return false;
     }
+
 }

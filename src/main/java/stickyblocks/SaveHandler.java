@@ -3,7 +3,6 @@ package stickyblocks;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Scanner;
 import java.util.Map.Entry;
@@ -12,22 +11,19 @@ import javafx.scene.paint.Color;
 
 public class SaveHandler implements ISavheHandler {
 
-    public void save(String filename, Game game) throws FileNotFoundException {
-        try (PrintWriter writer = new PrintWriter(new File(getFilePath(filename)))) {
+    public void save(String fileName, Game game) throws FileNotFoundException {
+        System.out.println(fileName);
+        try (PrintWriter writer = new PrintWriter(new File(getLevelResourcePath(fileName)))) {
+
             writer.println(game.getWidth());
             writer.println(game.getHeight());
 
-            // for (int y = 0; y < game.getHeight(); y++) {
-            // for (int x = 0; x < game.getWidth(); x++) {
-            // writer.print(game.getTile(x, y).getType());
-            // }
-            // }
-
+            String level = "";
             for (Tile tile : game) {
-                writer.println(tile.getType());
+                level += tile.getType() + "";
             }
 
-            writer.println(game.getPlayers().size());
+            writer.println(level);
 
             for (Player player : game.getPlayers()) {
                 writer.println(String.format("%d %d %b", player.getX(), player.getY(), player.isActive()));
@@ -40,18 +36,19 @@ public class SaveHandler implements ISavheHandler {
             }
 
             writer.println("-");
+
         } catch (Exception e) {
-            System.err.println("Error saving game: " + e.getMessage());
             throw new FileNotFoundException();
         }
     }
 
-    public URI getFilePath(String filename) throws URISyntaxException {
-        return SaveHandler.class.getResource(filename).toURI();
+    public String getLevelResourcePath(String filename) throws URISyntaxException {
+        return SaveHandler.class.getResource("levels/").getFile() + filename + ".txt";
     }
 
     public Game load(String filename) throws FileNotFoundException {
-        try (Scanner scanner = new Scanner(new File(getFilePath(filename)))) {
+        try (Scanner scanner = new Scanner(new File(getLevelResourcePath(filename)))) {
+            GameRenderer.clearColors();
 
             int width = scanner.nextInt();
             int height = scanner.nextInt();

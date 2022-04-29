@@ -52,12 +52,4 @@ public class Player {
         return "Player [awake=" + active + ", tile=" + tile.getType() + ", x=" + getX() + ", y=" + getY() + "]";
     }
 
-    @Override
-    public boolean equals(Object arg0) {
-        if (arg0 instanceof Player) {
-            Player player = (Player) arg0;
-            return player.getX() == getX() && player.getY() == getY() && player.isActive() == isActive();
-        }
-        return false;
-    }
 }

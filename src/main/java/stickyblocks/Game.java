@@ -15,9 +15,7 @@ public class Game implements Iterable<Tile> {
      * The Constructor of the Game class
      * 
      * @param width  The width of the play tilemap, the number of x-coordinates.
-     *               Indexed at zero.
      * @param height The height of the play tilemap, the number of y-coordinates.
-     *               Indexed at zero.
      */
     public Game(int width, int height) {
         if (width < 1 || height < 1) {
@@ -48,7 +46,7 @@ public class Game implements Iterable<Tile> {
         }
     }
 
-    private void move(int dx, int dy) {
+    private boolean move(int dx, int dy) {
 
         activePlayers = new ArrayList<Player>();
         for (Player player : players) {
@@ -57,48 +55,19 @@ public class Game implements Iterable<Tile> {
         }
 
         if (!canMove(dx, dy) || gameIsWon) {
-            return;
+            return false;
         }
 
-        // Sortering av spiller brikkene slik at de ikke flytter seg oppå felt
-        // hvor en annen brikke står
-        // FIXME: Dette bør gjøres bedre. kanskje knytte direkte opp mot dx og dy.
+        // Sort the players by their coordinates to prevent players from moving into
+        // each other.
         activePlayers.sort((obj1, obj2) -> {
-            if (dx != 0) {
-                if (dx > 0) {
-                    return obj2.getX() - obj1.getX();
-                }
-                return obj1.getX() - obj2.getX();
-            } else {
-                if (dy > 0) {
-                    return obj2.getY() - obj1.getY();
-                }
-                return obj1.getY() - obj2.getY();
-            }
+            return dx * (obj2.getX() - obj1.getX()) + dy * (obj2.getY() - obj1.getY());
         });
 
         for (Player player : activePlayers) {
 
             player.setTile(board[player.getY() + dy][player.getX() + dx]);
-
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    if (Math.abs(i) == Math.abs(j)) {
-                        continue;
-                    }
-
-                    try {
-                        Tile neighborTile = board[player.getY() + j][player.getX() + i];
-
-                        if (neighborTile.hasPlayer()) {
-                            neighborTile.getPlayer().setActive();
-                        }
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        continue;
-                    }
-
-                }
-            }
+            activateNeighbors(player.getTile());
 
         }
 
@@ -116,6 +85,30 @@ public class Game implements Iterable<Tile> {
             System.out.println("You have won");
         }
 
+        return true;
+    }
+
+    // Activates all the player tiles that are adjacent to the given tile, and all
+    // the tiles that are adjacent to those.
+    private void activateNeighbors(Tile tile) {
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (Math.abs(i) == Math.abs(j)) {
+                    continue;
+                }
+                try {
+                    Tile neighborTile = board[tile.getY() + j][tile.getX() + i];
+
+                    if (neighborTile.hasPlayer() && !neighborTile.getPlayer().isActive()) {
+                        neighborTile.getPlayer().setActive();
+                        activateNeighbors(neighborTile);
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    continue;
+                }
+
+            }
+        }
     }
 
     private boolean canMove(int dx, int dy) {
@@ -160,20 +153,20 @@ public class Game implements Iterable<Tile> {
         board[y][x].setType(set);
     }
 
-    public void moveUp() {
-        move(0, -1);
+    public boolean moveUp() {
+        return move(0, -1);
     }
 
-    public void moveRight() {
-        move(+1, 0);
+    public boolean moveRight() {
+        return move(+1, 0);
     }
 
-    public void moveDown() {
-        move(0, +1);
+    public boolean moveDown() {
+        return move(0, +1);
     }
 
-    public void moveLeft() {
-        move(-1, 0);
+    public boolean moveLeft() {
+        return move(-1, 0);
     }
 
     public int getWidth() {
@@ -225,7 +218,7 @@ public class Game implements Iterable<Tile> {
 
             @Override
             public boolean hasNext() {
-                return x < board.length && y < board[0].length;
+                return y < board.length && x < board[0].length;
             }
 
             @Override

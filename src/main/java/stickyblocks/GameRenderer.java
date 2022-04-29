@@ -1,13 +1,8 @@
 package stickyblocks;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.GraphicsContext;
@@ -19,14 +14,14 @@ import javafx.scene.paint.Color;
 
 public class GameRenderer extends AnimationTimer {
 
-    private int moveDir = 0, moveNumber = 0;
+    private int moveDir = 0;
 
-    private int[][] animationNumbers;
+    private final HashMap<Player, Integer> playerFrameNum = new HashMap<Player, Integer>();
 
     private Game game;
-    private GraphicsContext gc;
+    private final GraphicsContext gc;
 
-    private double h, w;
+    private final double h, w;
     private double xOff, yOff;
     private double tileSize;
 
@@ -42,11 +37,12 @@ public class GameRenderer extends AnimationTimer {
         defaultColors.put("bg", Color.web("#080808"));
         defaultColors.put("w", Color.web("#293141"));
         defaultColors.put("h", Color.web("#5f9dd1"));
-        defaultColors.put("g", Color.web("#d9396a"));
+        defaultColors.put("g", Color.web("#080808").invert().grayscale());
         defaultColors.put("p", Color.web("#5c8339"));
+        defaultColors.put("f", Color.web("#d9d9d9"));
     }
 
-    public GameRenderer(GraphicsContext gc) {
+    public GameRenderer(final GraphicsContext gc) {
         loadAssets();
         this.gc = gc;
 
@@ -55,7 +51,7 @@ public class GameRenderer extends AnimationTimer {
     }
 
     @Override
-    public void handle(long now) {
+    public void handle(final long now) {
 
         if (game == null) {
             this.stop();
@@ -65,8 +61,7 @@ public class GameRenderer extends AnimationTimer {
         draw();
     }
 
-    public void loadGame(Game game) {
-
+    public void loadGame(final Game game) {
         gc.clearRect(0, 0, w, h);
         this.game = game;
 
@@ -75,30 +70,26 @@ public class GameRenderer extends AnimationTimer {
         xOff = (w - (tileSize * game.getWidth())) / 2;
         yOff = (h - (tileSize * game.getHeight())) / 2;
 
-        animationNumbers = new int[game.getHeight()][game.getWidth()];
-
-        for (int i = 0; i < animationNumbers.length; i++) {
-            for (int j = 0; j < animationNumbers[i].length; j++) {
-                animationNumbers[i][j] = ThreadLocalRandom.current().nextInt(1, 3 + 1);
-            }
+        for (final Player player : game.getPlayers()) {
+            playerFrameNum.put(player, (int) (Math.random() * 4));
         }
     }
 
     private void draw() {
-        Tile[][] state = game.getBoard();
+        final Tile[][] state = game.getBoard();
         gc.setFill(getColor("bg"));
         gc.fillRect(xOff, yOff, w - (2 * xOff), h - (2 * yOff));
 
         for (int y = 0; y < state.length; y++) {
             for (int x = 0; x < state[0].length; x++) {
-                Tile tile = state[y][x];
+                final Tile tile = state[y][x];
                 drawTile(tile, x, y);
             }
         }
 
         for (int y = 0; y < state.length; y++) {
             for (int x = 0; x < state[0].length; x++) {
-                Tile tile = state[y][x];
+                final Tile tile = state[y][x];
 
                 if (tile.hasPlayer()) {
                     drawPlayer(tile, x, y);
@@ -108,41 +99,39 @@ public class GameRenderer extends AnimationTimer {
 
     }
 
-    private void drawImage(String fileName, Color color, int x, int y) {
+    private void drawImage(final String fileName, final Color color, final int x, final int y) {
         if (fileName.equals(""))
             return;
 
         // int animationNumber = (animationNumbers[y][x] + (frameCount / 9)) % 3 + 1;
 
-        int animationNumber = animationNumbers[y][x];
-
-        Image img = imageFiles.get(fileName + "_" + animationNumber);
+        Image img = imageFiles.get(fileName);
 
         img = reColor(img, color);
 
-        Double xCoord = x * tileSize + xOff;
-        Double yCoord = y * tileSize + yOff;
+        final Double xCoord = x * tileSize + xOff;
+        final Double yCoord = y * tileSize + yOff;
 
         gc.drawImage(img, xCoord, yCoord, tileSize, tileSize);
 
     }
 
-    private Image reColor(Image inputImage, Color newColor) {
-        int W = (int) inputImage.getWidth();
-        int H = (int) inputImage.getHeight();
-        WritableImage outputImage = new WritableImage(W, H);
-        PixelReader reader = inputImage.getPixelReader();
-        PixelWriter writer = outputImage.getPixelWriter();
+    private Image reColor(final Image inputImage, final Color newColor) {
+        final int W = (int) inputImage.getWidth();
+        final int H = (int) inputImage.getHeight();
+        final WritableImage outputImage = new WritableImage(W, H);
+        final PixelReader reader = inputImage.getPixelReader();
+        final PixelWriter writer = outputImage.getPixelWriter();
 
-        int nb = (int) (newColor.getBlue() * 255);
-        int nr = (int) (newColor.getRed() * 255);
-        int ng = (int) (newColor.getGreen() * 255);
+        final int nb = (int) (newColor.getBlue() * 255);
+        final int nr = (int) (newColor.getRed() * 255);
+        final int ng = (int) (newColor.getGreen() * 255);
 
         for (int y = 0; y < H; y++) {
             for (int x = 0; x < W; x++) {
 
                 int argb = reader.getArgb(x, y);
-                int a = (argb >> 24) & 0xFF;
+                final int a = (argb >> 24) & 0xFF;
                 int r = (argb >> 16) & 0xFF;
                 int g = (argb >> 8) & 0xFF;
                 int b = argb & 0xFF;
@@ -158,23 +147,23 @@ public class GameRenderer extends AnimationTimer {
         return outputImage;
     }
 
-    private void drawTile(Tile tile, int x, int y) {
+    private void drawTile(final Tile tile, final int x, final int y) {
         String img = "";
-        String type = tile.getType();
-        Color color = getColor(type);
+        final String type = tile.getType();
+        final Color color = getColor(type);
 
         switch (type) {
             case "w":
                 img = bitMasking(tile, "wall");
                 break;
             case "h":
-                img = bitMasking(tile, "water");
+                img = bitMasking(tile, "hole");
                 break;
             case "g":
                 img = "goal_0";
                 break;
             case "f":
-                // img = "fragile";
+                img = "fragile_0";
                 break;
             default:
                 break;
@@ -183,14 +172,41 @@ public class GameRenderer extends AnimationTimer {
         drawImage(img, color, x, y);
     }
 
-    private void drawPlayer(Tile tile, int x, int y) {
-        String img = "";
-        Color color = getColor("p");
+    public void moveRight() {
+        move(0);
+    }
 
-        if (tile.getPlayer().isActive()) {
-            img = "keke_0";
+    public void moveUp() {
+        move(1);
+    }
+
+    public void moveLeft() {
+        move(2);
+    }
+
+    public void moveDown() {
+        move(3);
+    }
+
+    private void move(final int moveDir) {
+        this.moveDir = moveDir;
+
+        for (final Player player : game.getPlayers()) {
+            if (player.isActive())
+                playerFrameNum.put(player, (playerFrameNum.get(player) + 1) % 4);
+        }
+    }
+
+    private void drawPlayer(final Tile tile, final int x, final int y) {
+        String img = "";
+        final Color color = getColor("p");
+
+        final Player player = tile.getPlayer();
+
+        if (player.isActive()) {
+            img = "player_" + (playerFrameNum.get(player) + 4 * moveDir);
         } else {
-            img = "keke_15";
+            img = "player_sit_" + (playerFrameNum.get(player) % 2);
         }
 
         drawImage(img, color, x, y);
@@ -213,12 +229,12 @@ public class GameRenderer extends AnimationTimer {
      * @param type
      * @return File name of image to be drawn
      */
-    private String bitMasking(Tile tile, String typeName) {
+    private String bitMasking(final Tile tile, final String typeName) {
 
-        Tile[][] board = game.getBoard();
-        String type = tile.getType();
-        String filename = typeName + "_";
-        int x = tile.getX(), y = tile.getY();
+        final Tile[][] board = game.getBoard();
+        final String type = tile.getType();
+        final String filename = typeName + "_";
+        final int x = tile.getX(), y = tile.getY();
 
         /*
          * Returns the tile index after checking all 8 positions around the tile.
@@ -238,22 +254,27 @@ public class GameRenderer extends AnimationTimer {
         return filename + index;
     }
 
-    private String getType(int x, int y, Tile[][] board) {
+    private String getType(final int x, final int y, final Tile[][] board) {
         if (x < 0 || x >= board[0].length) {
-            int normX = x < 0 ? 0 : board[0].length - 1;
+            final int normX = x < 0 ? 0 : board[0].length - 1;
             return board[y][normX].getType();
         } else if (y < 0 || y >= board.length) {
-            int normY = y < 0 ? 0 : board.length - 1;
+            final int normY = y < 0 ? 0 : board.length - 1;
             return board[normY][x].getType();
         }
         return game.getBoard()[y][x].getType();
     }
 
-    public static void addColor(String key, Color color) {
+    public static void addColor(final String key, final Color color) {
         levelColors.put(key, color);
     }
 
-    public Color getColor(String color) {
+    private Color getColor(final String color) {
+
+        if (levelColors.containsKey("bg") && color.equals("g")) {
+            return levelColors.get("bg").invert().grayscale();
+        }
+
         return levelColors.getOrDefault(color, defaultColors.get(color));
     }
 
@@ -261,21 +282,20 @@ public class GameRenderer extends AnimationTimer {
         return levelColors;
     }
 
+    public static void clearColors() {
+        levelColors.clear();
+    }
+
     private void loadAssets() {
-        imgFolderPath = "src/main/resources/stickyblocks/img/";
+        imgFolderPath = GameRenderer.class.getResource("img").getFile();
+        final File imgFolder = new File(imgFolderPath);
 
-        try (Stream<Path> paths = Files.walk(Paths.get(imgFolderPath))) {
-            paths
-                    .filter(Files::isRegularFile)
-                    .forEach((f) -> {
-                        String filename = f.getFileName().toString();
-                        Image img = new Image(
-                                getClass().getResource("img/" + filename).toString());
-                        imageFiles.put(filename.substring(0, filename.length() - 4), img);
-                    });
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        for (final File file : imgFolder.listFiles()) {
+            final String fileName = file.getName();
+            if (fileName.endsWith(".png")) {
+                final Image img = new Image(file.toURI().toString());
+                imageFiles.put(fileName.substring(0, fileName.length() - 4), img);
+            }
         }
 
     }
